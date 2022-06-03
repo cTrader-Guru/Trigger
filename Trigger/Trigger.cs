@@ -47,23 +47,47 @@ namespace cAlgo
         [Parameter(NAME + " " + VERSION, Group = "Identity", DefaultValue = "https://www.google.com/search?q=ctrader+guru+trigger")]
         public string ProductInfo { get; set; }
 
-        [Parameter("Trigger when this value", Group = "Logic")]
-        public DataSeries SourceA { get; set; }
-
-        [Parameter("Is", Group = "Logic", DefaultValue = Logical.Major)]
-        public Logical What { get; set; }
-
-        [Parameter("Than this other value", Group = "Logic")]
-        public DataSeries SourceB { get; set; }
-
-        [Parameter("With this message (empty = standard message)", Group = "Logic", DefaultValue = "")]
-        public string Message { get; set; }
-
-        [Parameter("When to check the logic?", Group = "Monitoring", DefaultValue = Monitoring.Tick)]
+        [Parameter("Check logic every", Group = "Monitoring", DefaultValue = Monitoring.Tick)]
         public Monitoring MonitorAt { get; set; }
 
-        [Parameter("Reset after these candles", Group = "Monitoring", DefaultValue = 5, MinValue = 3)]
+        [Parameter("Reset after these bars", Group = "Monitoring", DefaultValue = 7, MinValue = 3)]
         public int MonitorReset { get; set; }
+
+        [Parameter("Enabled?", Group = "First Logic", DefaultValue = false)]
+        public bool FirstLogicEnabled { get; set; }
+
+        [Parameter("'A' Trigger when this value", Group = "First Logic")]
+        public DataSeries SourceA { get; set; }
+
+        [Parameter("Is", Group = "First Logic", DefaultValue = Logical.Major)]
+        public Logical What { get; set; }
+
+        [Parameter("'B' Than this other value", Group = "First Logic")]
+        public DataSeries SourceB { get; set; }
+
+        [Parameter("'C' Or this level (greater than zero bypass 'B' )", Group = "First Logic", DefaultValue = 0, MinValue = 0)]
+        public double SourceC { get; set; }
+
+        [Parameter("With this message (empty = standard message)", Group = "First Logic", DefaultValue = "")]
+        public string Message { get; set; }
+
+        [Parameter("Enabled?", Group = "Second Logic", DefaultValue = false)]
+        public bool SecondLogicEnabled { get; set; }
+
+        [Parameter("'A' Trigger when this value", Group = "Second Logic")]
+        public DataSeries SourceA2 { get; set; }
+
+        [Parameter("Is", Group = "Second Logic", DefaultValue = Logical.Major)]
+        public Logical What2 { get; set; }
+
+        [Parameter("'B' Than this other value", Group = "Second Logic")]
+        public DataSeries SourceB2 { get; set; }
+
+        [Parameter("'C' Or this level (greater than zero bypass 'B' )", Group = "Second Logic", DefaultValue = 0, MinValue = 0)]
+        public double SourceC2 { get; set; }
+
+        [Parameter("With this message (empty = standard message)", Group = "Second Logic", DefaultValue = "")]
+        public string Message2 { get; set; }
 
         [Parameter("Enabled?", Group = "PopUp", DefaultValue = true)]
         public bool PopUpEnabled { get; set; }
@@ -167,12 +191,18 @@ namespace cAlgo
 
                 case Monitoring.Bar:
 
-                    if (IsANewBar) PerformeLogic(1);
+                    if (IsANewBar) {
+
+                        PerformeFirstLogic(1);
+                        PerformeSecondLogic(1);
+
+                    }
                     break;
 
                 case Monitoring.Tick:
 
-                    PerformeLogic();
+                    PerformeFirstLogic();
+                    PerformeSecondLogic();
                     break;
 
             }
@@ -185,44 +215,113 @@ namespace cAlgo
 
         #region Methods
 
-        private void PerformeLogic(int index = 0)
+        private void PerformeFirstLogic(int index = 0)
         {
+
+            if (!FirstLogicEnabled) return;
 
             switch (What)
             {
 
                 case Logical.Major:
 
-                    if (SourceA.Last(index) > SourceB.Last(index) && SourceA.Last(index + 1) <= SourceB.Last(index + 1))
-                        TriggerNow("The first resource is greater than the second.");
+                    if (SourceC > 0 && SourceA.Last(index) > SourceC && SourceA.Last(index + 1) <= SourceC)
+                        TriggerNow("first logic, 'A' is greater than the 'C'");                    
+                    else if (SourceA.Last(index) > SourceB.Last(index) && SourceA.Last(index + 1) <= SourceB.Last(index + 1))
+                        TriggerNow("first logic, 'A' is greater than the 'B'");
 
                     break;
 
                 case Logical.Minor:
 
-                    if (SourceA.Last(index) < SourceB.Last(index) && SourceA.Last(index + 1) >= SourceB.Last(index + 1))
-                        TriggerNow("The first resource is less than the second.");
+                    if (SourceC > 0 && SourceA.Last(index) < SourceC && SourceA.Last(index + 1) >= SourceC)
+                        TriggerNow("first logic, 'A' is less than the 'C'");
+                    else if (SourceA.Last(index) < SourceB.Last(index) && SourceA.Last(index + 1) >= SourceB.Last(index + 1))
+                        TriggerNow("first logic, 'A' is less than the 'B'");
 
                     break;
 
                 case Logical.Equal:
 
-                    if (SourceA.Last(index) == SourceB.Last(index) && SourceA.Last(index + 1) != SourceB.Last(index + 1))
-                        TriggerNow("The first resource is the equal of the second.");
+                    if (SourceC > 0 && SourceA.Last(index) == SourceC && SourceA.Last(index + 1) != SourceC)
+                        TriggerNow("first logic, 'A' is equal than the 'C'");
+                    else if (SourceA.Last(index) == SourceB.Last(index) && SourceA.Last(index + 1) != SourceB.Last(index + 1))
+                        TriggerNow("first logic, 'A' is equal than the 'B'");
 
                     break;
 
                 case Logical.MajorOrEqual:
 
-                    if (SourceA.Last(index) >= SourceB.Last(index) && SourceA.Last(index + 1) < SourceB.Last(index + 1))
-                        TriggerNow("The first resource is greater or equal of the second.");
+                    if (SourceC > 0 && SourceA.Last(index) >= SourceC && SourceA.Last(index + 1) < SourceC)
+                        TriggerNow("first logic, 'A' is greater or equal than the 'C'");
+                    else if (SourceA.Last(index) >= SourceB.Last(index) && SourceA.Last(index + 1) < SourceB.Last(index + 1))
+                        TriggerNow("first logic, 'A' is greater or equal than the 'B'");
 
                     break;
 
                 case Logical.MinorOrEqual:
 
-                    if (SourceA.Last(index) <= SourceB.Last(index) && SourceA.Last(index + 1) > SourceB.Last(index + 1))
-                        TriggerNow("The first resource is less or equal of the second.");
+                    if (SourceC > 0 && SourceA.Last(index) <= SourceC && SourceA.Last(index + 1) > SourceC)
+                        TriggerNow("first logic, 'A' is less or equal than the 'C'");
+                    else if (SourceA.Last(index) <= SourceB.Last(index) && SourceA.Last(index + 1) > SourceB.Last(index + 1))
+                        TriggerNow("first logic, 'A' is less or equal than the 'B'");
+
+                    break;
+
+            }
+
+        }
+
+        private void PerformeSecondLogic(int index = 0)
+        {
+
+            if (!SecondLogicEnabled) return;
+
+            switch (What2)
+            {
+
+                case Logical.Major:
+
+                    if (SourceC2 > 0 && SourceA2.Last(index) > SourceC2 && SourceA2.Last(index + 1) <= SourceC2)
+                        TriggerNow("second logic, 'A' is greater than the 'C'", 2);
+                    else if (SourceA2.Last(index) > SourceB2.Last(index) && SourceA2.Last(index + 1) <= SourceB2.Last(index + 1))
+                        TriggerNow("second logic, 'A' is greater than the 'B'", 2);
+
+                    break;
+
+                case Logical.Minor:
+
+                    if (SourceC2 > 0 && SourceA2.Last(index) < SourceC2 && SourceA2.Last(index + 1) >= SourceC2)
+                        TriggerNow("second logic, 'A' is less than the 'C'", 2);
+                    else if (SourceA2.Last(index) < SourceB2.Last(index) && SourceA2.Last(index + 1) >= SourceB2.Last(index + 1))
+                        TriggerNow("second logic, 'A' is less than the 'B'", 2);
+
+                    break;
+
+                case Logical.Equal:
+
+                    if (SourceC2 > 0 && SourceA2.Last(index) == SourceC2 && SourceA2.Last(index + 1) != SourceC2)
+                        TriggerNow("second logic, 'A' is equal than the 'C'", 2);
+                    else if (SourceA2.Last(index) == SourceB2.Last(index) && SourceA2.Last(index + 1) != SourceB2.Last(index + 1))
+                        TriggerNow("second logic, 'A' is equal than the 'B'", 2);
+
+                    break;
+
+                case Logical.MajorOrEqual:
+
+                    if (SourceC2 > 0 && SourceA2.Last(index) >= SourceC2 && SourceA2.Last(index + 1) < SourceC2)
+                        TriggerNow("second logic, 'A' is greater or equal than the 'C'", 2);
+                    else if (SourceA2.Last(index) >= SourceB2.Last(index) && SourceA2.Last(index + 1) < SourceB2.Last(index + 1))
+                        TriggerNow("second logic, 'A' is greater or equal than the 'B'", 2);
+
+                    break;
+
+                case Logical.MinorOrEqual:
+
+                    if (SourceC2 > 0 && SourceA2.Last(index) <= SourceC2 && SourceA2.Last(index + 1) > SourceC2)
+                        TriggerNow("second logic, 'A' is less or equal than the 'C'", 2);
+                    else if (SourceA2.Last(index) <= SourceB2.Last(index) && SourceA2.Last(index + 1) > SourceB2.Last(index + 1))
+                        TriggerNow("second logic, 'A' is less or equal than the 'B'", 2);
 
                     break;
 
@@ -258,13 +357,15 @@ namespace cAlgo
 
         }
 
-        private void TriggerNow(string mex)
+        private void TriggerNow(string mex, int logic = 1 )
         {
 
             if (RunningMode != RunningMode.RealTime || AlertInThisBar || !AllowToTrigger)
                 return;
 
-            mex = string.Format("{0}: {1}", SymbolName, (Message.Trim().Length == 0 ? mex : Message.Trim()));
+            string customMex = logic == 2 ? Message2 : Message;
+
+            mex = string.Format("{0}: {1}", SymbolName, (customMex.Trim().Length == 0 ? mex : customMex.Trim()));
 
             ToPopUp(mex);
 
