@@ -38,7 +38,7 @@ namespace cAlgo
 
         public const string NAME = "Trigger";
 
-        public const string VERSION = "1.0.0";
+        public const string VERSION = "1.0.1";
 
         #endregion
 
@@ -106,15 +106,9 @@ namespace cAlgo
 
         #region Property
 
-        int LastIndex = -1,
-            CountCandle = 0
-            ;
+        int LastIndex = -1, CountCandle = 0;
 
-        bool
-            AlertInThisBar = true,
-            IsANewBar = false,
-            AllowToTrigger = true
-            ;
+        bool AlertInThisBar = true, IsANewBar = false, AllowToTrigger = true;
 
 
         #endregion
@@ -126,7 +120,8 @@ namespace cAlgo
 
             Print("{0} : {1}", NAME, VERSION);
 
-            if (!WebhookEnabled) return;
+            if (!WebhookEnabled)
+                return;
 
             EndPoint = EndPoint.Trim();
             if (EndPoint.Length < 1)
@@ -170,7 +165,8 @@ namespace cAlgo
 
                         CountCandle++;
 
-                        if (CountCandle % MonitorReset == 0) AllowToTrigger = true;
+                        if (CountCandle % MonitorReset == 0)
+                            AllowToTrigger = true;
 
                     }
                     else
@@ -191,7 +187,8 @@ namespace cAlgo
 
                 case Monitoring.Bar:
 
-                    if (IsANewBar) {
+                    if (IsANewBar)
+                    {
 
                         PerformeFirstLogic(1);
                         PerformeSecondLogic(1);
@@ -218,7 +215,8 @@ namespace cAlgo
         private void PerformeFirstLogic(int index = 0)
         {
 
-            if (!FirstLogicEnabled) return;
+            if (!FirstLogicEnabled)
+                return;
 
             switch (What)
             {
@@ -226,7 +224,7 @@ namespace cAlgo
                 case Logical.Major:
 
                     if (SourceC > 0 && SourceA.Last(index) > SourceC && SourceA.Last(index + 1) <= SourceC)
-                        TriggerNow("first logic, 'A' is greater than the 'C'");                    
+                        TriggerNow("first logic, 'A' is greater than the 'C'");
                     else if (SourceA.Last(index) > SourceB.Last(index) && SourceA.Last(index + 1) <= SourceB.Last(index + 1))
                         TriggerNow("first logic, 'A' is greater than the 'B'");
 
@@ -275,7 +273,8 @@ namespace cAlgo
         private void PerformeSecondLogic(int index = 0)
         {
 
-            if (!SecondLogicEnabled) return;
+            if (!SecondLogicEnabled)
+                return;
 
             switch (What2)
             {
@@ -332,7 +331,9 @@ namespace cAlgo
         private void ToWebhook(string mex)
         {
 
-            if (MyWebook == null || !WebhookEnabled || mex == null || mex.Trim().Length == 0)
+            bool canSendMessage = RunningMode == RunningMode.RealTime;
+
+            if (!canSendMessage || MyWebook == null || !WebhookEnabled || mex == null || mex.Trim().Length == 0)
                 return;
 
             mex = mex.Trim();
@@ -348,7 +349,9 @@ namespace cAlgo
         private void ToPopUp(string mex)
         {
 
-            if (!PopUpEnabled || mex == null || mex.Trim().Length == 0)
+            bool canShowPopUp = RunningMode == RunningMode.RealTime || RunningMode == RunningMode.VisualBacktesting;
+
+            if (!canShowPopUp || !PopUpEnabled || mex == null || mex.Trim().Length == 0)
                 return;
 
             mex = mex.Trim();
@@ -357,10 +360,10 @@ namespace cAlgo
 
         }
 
-        private void TriggerNow(string mex, int logic = 1 )
+        private void TriggerNow(string mex, int logic = 1)
         {
 
-            if (RunningMode != RunningMode.RealTime || AlertInThisBar || !AllowToTrigger)
+            if (AlertInThisBar || !AllowToTrigger)
                 return;
 
             string customMex = logic == 2 ? Message2 : Message;
