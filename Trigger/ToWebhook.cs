@@ -2,6 +2,7 @@
 using System.Net;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+using System.Net.Http;
 
 namespace cAlgo
 {
@@ -104,27 +105,16 @@ namespace cAlgo
 
             try
             {
+               
+                HttpClient client = new();
+                HttpResponseMessage responsej = await client.GetAsync(EndPoint + "?" + post_params);
 
-                Uri myuri = new Uri(EndPoint);
+                responsej.EnsureSuccessStatusCode();
+                string responseBody = await responsej.Content.ReadAsStringAsync();
 
-                string pattern = string.Format("{0}://{1}/.*", myuri.Scheme, myuri.Host);
-
-                Regex urlRegEx = new Regex(pattern);
-                WebPermission p = new WebPermission(NetworkAccess.Connect, urlRegEx);
-                p.Assert();
-
-                ServicePointManager.SecurityProtocol = (SecurityProtocolType)192 | (SecurityProtocolType)768 | (SecurityProtocolType)3072;
-
-                using (WebClient wc = new WebClient())
-                {
-
-                    wc.Headers[HttpRequestHeader.ContentType] = "application/x-www-form-urlencoded";
-                    string json_result = await Task.Run(() => wc.UploadString(myuri, post_params));
-
-                    response.Response = json_result;
-                    response.Error = 0;
-                    return response;
-                }
+                response.Response = responseBody;
+                response.Error = 0;
+                return response;
 
             }
             catch (Exception exc)

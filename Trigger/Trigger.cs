@@ -1,4 +1,13 @@
-﻿using cAlgo.API;
+
+/*
+ 
+    Problemi con MessageBox:
+    https://help.ctrader.com/ctrader-automate/guides/ui/WinForms/#introduction
+ 
+ */
+
+
+using cAlgo.API;
 using System.Windows.Forms;
 using System.Threading.Tasks;
 using System.Threading;
@@ -38,7 +47,7 @@ namespace cAlgo
 
         public const string NAME = "Trigger";
 
-        public const string VERSION = "1.0.1";
+        public const string VERSION = "1.0.2";
 
         #endregion
 
@@ -50,7 +59,7 @@ namespace cAlgo
         [Parameter("Check logic every", Group = "Monitoring", DefaultValue = Monitoring.Tick)]
         public Monitoring MonitorAt { get; set; }
 
-        [Parameter("Reset after these bars", Group = "Monitoring", DefaultValue = 7, MinValue = 3)]
+        [Parameter("Reset after these bars", Group = "Monitoring", DefaultValue = 3, MinValue = 1)]
         public int MonitorReset { get; set; }
 
         [Parameter("Enabled?", Group = "First Logic", DefaultValue = false)]
@@ -127,7 +136,7 @@ namespace cAlgo
             if (EndPoint.Length < 1)
             {
 
-                MessageBox.Show("Wrong 'EndPoint', es. 'https://api.telegram.org/bot[ YOUR TOKEN ]/sendMessage'", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                System.Windows.Forms.MessageBox.Show("Wrong 'EndPoint', es. 'https://api.telegram.org/bot[ YOUR TOKEN ]/sendMessage'", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
 
             }
@@ -136,7 +145,7 @@ namespace cAlgo
             if (PostParams.IndexOf("{0}") < 0)
             {
 
-                MessageBox.Show("Wrong 'POST params', es. 'chat_id=[ @CHATID ]&text={0}'", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                System.Windows.Forms.MessageBox.Show("Wrong 'POST params', es. 'chat_id=[ @CHATID ]&text={0}'", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
 
             }
@@ -165,7 +174,7 @@ namespace cAlgo
 
                         CountCandle++;
 
-                        if (CountCandle % MonitorReset == 0)
+                        if (CountCandle >= MonitorReset)
                             AllowToTrigger = true;
 
                     }
@@ -356,7 +365,7 @@ namespace cAlgo
 
             mex = mex.Trim();
 
-            new Thread(new ThreadStart(delegate { MessageBox.Show(mex, "BreakOut", MessageBoxButtons.OK, MessageBoxIcon.Information); })).Start();
+            new Thread(new ThreadStart(delegate { System.Windows.Forms.MessageBox.Show(mex, "BreakOut", MessageBoxButtons.OK, MessageBoxIcon.Information); })).Start();
 
         }
 
